@@ -1,6 +1,6 @@
 ### Examples
 
-#### Running spigot server
+#### Running spigot server with 2048 megabytes max memory
 ```bash
 mca bukkit ./spigot.jar -m 2048M
 ```
