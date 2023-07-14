@@ -1,4 +1,4 @@
-### MCA examples (requires `JRE`)
+### MCA examples (requires `JRE` and `wget`)
 
 #### Running spigot server with 2048 megabytes max memory
 ```bash
