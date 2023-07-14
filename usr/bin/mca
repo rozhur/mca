@@ -1,0 +1,88 @@
+#!/bin/sh
+
+[ -z "$2" ] && echo "Usage: $(basename -- "$0") <platform> <name> [-x min_memory] [-m max_memory]" && exit 1
+
+set -e
+
+while getopts :x:m: opt; do
+    case "$opt" in
+        x)
+            MIN_MEMORY="$OPTARG"
+            ;;
+        m)
+            MAX_MEMORY="$OPTARG"
+            ;;
+    esac
+done
+
+JVM_FLAGS="-Dfile.encoding=UTF-8 \
+    -Djava.awt.headless=true"
+
+PLATFORM="$1"
+
+case "$PLATFORM" in
+    bungee)
+        ;;
+    waterfall|velocity)
+        JVM_FLAGS="$JVM_FLAGS -XX:+UseG1GC \
+            -XX:G1HeapRegionSize=4M \
+            -XX:+UnlockExperimentalVMOptions \
+            -XX:+ParallelRefProcEnabled \
+            -XX:+AlwaysPreTouch \
+            -DIReallyKnowWhatIAmDoingISwear=true"
+        ;;
+    paper|bukkit)
+        JVM_FLAGS="$JVM_FLAGS -Dcom.mojang.eula.agree=true \
+            -DIReallyKnowWhatIAmDoingISwear=true"
+        [ "$PLATFORM" = "paper" ] && JVM_FLAGS="$JVM_FLAGS -XX:+UseG1GC \
+            -XX:+ParallelRefProcEnabled \
+            -XX:MaxGCPauseMillis=200 \
+            -XX:+UnlockExperimentalVMOptions \
+            -XX:+DisableExplicitGC \
+            -XX:+AlwaysPreTouch \
+            -XX:G1NewSizePercent=30 \
+            -XX:G1MaxNewSizePercent=40 \
+            -XX:G1HeapRegionSize=8M \
+            -XX:G1ReservePercent=20 \
+            -XX:G1HeapWastePercent=5 \
+            -XX:G1MixedGCCountTarget=4 \
+            -XX:InitiatingHeapOccupancyPercent=15 \
+            -XX:G1MixedGCLiveThresholdPercent=90 \
+            -XX:G1RSetUpdatingPauseTimePercent=5 \
+            -XX:SurvivorRatio=32 \
+            -XX:+PerfDisableSharedMem \
+            -XX:MaxTenuringThreshold=1 \
+            -Dusing.aikars.flags=https://mcflags.emc.gs \
+            -Daikars.new.flags=true"
+        ;;
+    *)
+        echo "Invalid platform: $PLATFORM. Valid 'bungee', 'waterfall', 'velocity', 'paper' and 'bukkit'" >&2 
+        exit 2
+        ;;
+esac 
+
+NAME="$2"
+
+[ -e "$NAME" ] && MCA_JAR="$(readlink -f "$NAME")" || {
+    MCA_DIR="$HOME/minecraft/server/$NAME"
+    [ ! -d "$MCA_DIR" ] && echo "Minecraft server '$MCA_DIR' not found" >&2 && exit 2
+    MCA_JAR="$MCA_DIR/server.jar"
+}
+
+[ ! -e "$MCA_JAR" ] && echo "'$MCA_JAR' not found" >&2 && exit 2
+
+[ -n "$JAVA_HOME" ] && {
+    PATH="$JAVA_HOME:$PATH"
+}
+
+java -version || (echo "Unable to get java version" >&2; exit 2)
+
+[ -n "$MAX_MEMORY" ] && JVM_FLAGS="-Xmx$MAX_MEMORY $JVM_FLAGS"
+[ -n "$MIN_MEMORY" ] && JVM_FLAGS="-Xms$MIN_MEMORY $JVM_FLAGS"
+
+while true; do
+    echo ""
+    java -server $JVM_FLAGS -jar "$MCA_JAR" || exit 2
+    echo "Restarting..."
+    sleep 1
+done

@@ -1,0 +1,33 @@
+#!/bin/sh
+
+[ -z "$2" ] && echo "Usage: $(basename -- "$0") <project_id> <version> [build]" && exit 1
+
+PROJECT="$1"
+VERSION="$2"
+BUILD="$3"
+
+set -e
+
+PAPERMC_URL="https://papermc.io/api/v2/projects/$PROJECT/versions/$VERSION"
+
+[ -z "$BUILD" ] && LATEST=1 BUILD="$(wget -qO- "$PAPERMC_URL" | jq -r '.["builds"][-1]')" 
+[ -z "$BUILD" ] && echo "Unknown build of '$PROJECT-$VERSION'" >&2 && exit 2
+
+BUILD_URL="$PAPERMC_URL/builds/$BUILD"
+
+JAR="$PROJECT.jar"
+if [ -e "$JAR" ] && [ -z "$FORCE" ]; then
+    BUILD_HASH="$(wget -qO- "$BUILD_URL" | jq -r '.["downloads"]["application"]["sha256"]')"
+    CURRENT_HASH="$(sha256sum "$JAR" | cut -d' ' -f1)"
+    [ "$BUILD_HASH" = "$CURRENT_HASH" ] && echo "$JAR is up to date" && exit 1
+    mv "$JAR" "$JAR.bak"
+fi
+
+DOWNLOAD_URL="$BUILD_URL/downloads/$PROJECT-$VERSION-$BUILD.jar"
+
+echo "Project: $PROJECT"
+echo "Version: $VERSION"
+[ -n "$LATEST" ] && echo "Build: latest" || echo "Build: $BUILD"
+
+wget -qc --show-progress "$DOWNLOAD_URL" -O "$JAR"
+
