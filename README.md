@@ -1,4 +1,4 @@
-### MCA examples (requires `JRE` and `wget`)
+### MCA examples (requires `JRE`)
 
 #### Running spigot server with 2048 megabytes max memory
 ```bash
@@ -15,7 +15,7 @@ mca bukkit ./paper.jar -m 2048M
 mca velocity ./velocity.jar -m 2048M
 ```
 
-### Paper-DL examples (requires `jq`)
+### Paper-DL examples (requires `jq` and `wget`)
 #### Download paper jar 1.20.1 latest build (with sha256 checking)
 ```bash
 papermc-dl paper 1.20.1
