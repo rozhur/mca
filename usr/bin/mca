@@ -1,21 +1,14 @@
 #!/bin/sh
 
-[ -z "$2" ] && echo "Usage: $(basename -- "$0") <platform> <name> [-x min_memory] [-m max_memory]" && exit 1
+[ -z "$2" ] && echo "Usage: $(basename -- "$0") <platform> <name> [[max_memory]|[min_memory] [-m max_memory]]" && exit 1
 
 set -e
 
-while getopts :x:m: opt; do
-    case "$opt" in
-        x)
-            MIN_MEMORY="$OPTARG"
-            ;;
-        m)
-            MAX_MEMORY="$OPTARG"
-            ;;
-    esac
-done
+[ -n "$3" ] && MAX_MEMORY="$3"
+[ -n "$4" ] && MIN_MEMORY="$3" MAX_MEMORY="$4"
 
-JVM_FLAGS="-Dfile.encoding=UTF-8 \
+[ -n "$JVM_FLAGS" ] && JVM_FLAGS="$JVM_FLAGS "
+JVM_FLAGS="$JVM_FLAGS-Dfile.encoding=UTF-8 \
     -Djava.awt.headless=true"
 
 PLATFORM="$1"
@@ -82,7 +75,7 @@ java -version || (echo "Unable to get java version" >&2; exit 2)
 
 while true; do
     echo ""
-    java -server $JVM_FLAGS -jar "$MCA_JAR" || exit 2
+    java -server $JVM_FLAGS -jar "$MCA_JAR"
     echo "Restarting..."
     sleep 1
 done
