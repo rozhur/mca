@@ -1,18 +1,23 @@
 ### MCA examples (requires `JRE`)
 
+#### Usage
+```bash
+mca <type> <path|name> [[max_memory]|[min_memory] [max_memory]]
+```
+
 #### Running spigot server with 2048 megabytes max memory
 ```bash
-mca bukkit ./spigot.jar -m 2048M
+mca bukkit ./spigot.jar 2048M
 ```
 
 #### Running paper server with Aikar flags
 ```bash
-mca bukkit ./paper.jar -m 2048M
+mca bukkit ./paper.jar 2048M
 ```
 
 #### Running velocity server with Aikar flags
 ```bash
-mca velocity ./velocity.jar -m 2048M
+mca velocity ./velocity.jar 512M 2048M
 ```
 
 ### Paper-DL examples (requires `jq` and `wget`)
